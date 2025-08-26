@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil - Sistem Blacklist Turki</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-red: #E30A17;
+            --primary-red-dark: #B30812;
+            --secondary-red: #C00914;
+            --accent-white: #FFFFFF;
+            --accent-gray: #F8F8F8;
+            --success-green: #10b981;
+            --warning-orange: #f97316;
+            --error-red: #ef4444;
+            --neutral-gray: #6b7280;
+            --light-gray: #f3f4f6;
+            --white: #ffffff;
+            --dark-text: #333333;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --shadow-heavy: rgba(0, 0, 0, 0.25);
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: var(--white);
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary-red);
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px var(--shadow-medium);
+            z-index: 1000;
+        }
+        .nav-content {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+        .app-title {
+            color: var(--white);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        /* Container and Layout */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+            position: relative;
+        }
+        .page-content {
+            padding-top: 70px;
+            padding-bottom: 20px;
+        }
+        /* Profile Header */
+        .profile-header {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+            text-align: center;
+        }
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 600;
+            margin: 0 auto 16px;
+        }
+        .profile-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 4px;
+        }
+        .profile-email {
+            font-size: 14px;
+            color: var(--neutral-gray);
+        }
+        /* Profile Cards */
+        .profile-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        .profile-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-text);
+        }
+        .info-value.empty {
+            color: var(--neutral-gray);
+            font-style: italic;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+            margin-bottom: 12px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 4px 8px rgba(227, 10, 23, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(227, 10, 23, 0.4);
+        }
+        .btn-secondary {
+            background: var(--light-gray);
+            color: var(--dark-text);
+        }
+        .btn-secondary:hover {
+            background: var(--neutral-gray);
+        }
+        .btn-danger {
+            background: var(--error-red);
+            color: var(--white);
+        }
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--dark-text);
+            font-size: 14px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(227, 10, 23, 0.1);
+        }
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .form-actions .btn {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px var(--shadow-light);
+            z-index: 1000;
+        }
+        .nav-tabs {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--neutral-gray);
+            transition: var(--transition);
+            border-radius: 8px;
+            min-width: 60px;
+        }
+        .nav-tab:hover,
+        .nav-tab.active {
+            color: var(--primary-red);
+        }
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .profile-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p>Memuat Profil...</p>
+    </div>
+    
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo-container">
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/015/272/017/small/turkey-3d-rounded-flag-with-transparent-background-free-png.png" alt="Turki Flag Logo" class="logo">
+                <div class="app-title">Sistem Blacklist Turki</div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="goToDashboard()">Kembali</button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-content">
+            <!-- Profile Header -->
+            <div class="profile-header fade-in">
+                <div class="profile-avatar" id="profileAvatar">U</div>
+                <h2 class="profile-name" id="profileName">Loading...</h2>
+                <p class="profile-email" id="profileEmail">Loading...</p>
+            </div>
+            
+            <!-- Personal Information Card -->
+            <div class="profile-card fade-in" id="personalInfoCard">
+                <h3 class="card-title">Informasi Pribadi</h3>
+                <div class="profile-info">
+                    <div class="info-item">
+                        <span class="info-label">Nama Lengkap</span>
+                        <span class="info-value" id="infoName">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tanggal Lahir</span>
+                        <span class="info-value" id="infoBirthDate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Jenis Kelamin</span>
+                        <span class="info-value" id="infoGender">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Nomor Telepon</span>
+                        <span class="info-value" id="infoPhone">-</span>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="editProfile()">Edit Profil</button>
+            </div>
+            
+            <!-- Account Settings Card -->
+            <div class="profile-card fade-in">
+                <h3 class="card-title">Pengaturan Akun</h3>
+                <button class="btn btn-secondary" onclick="changePassword()">Ubah Kata Sandi</button>
+                <button class="btn btn-danger" onclick="confirmDeleteAccount()">Hapus Akun</button>
+            </div>
+            
+            <!-- Edit Profile Form (Hidden by default) -->
+            <div class="profile-card fade-in" id="editProfileForm" style="display: none;">
+                <h3 class="card-title">Edit Profil</h3>
+                <form id="profileUpdateForm" onsubmit="handleProfileUpdate(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="editName">Nama Lengkap</label>
+                        <input type="text" id="editName" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editBirthDate">Tanggal Lahir</label>
+                        <input type="date" id="editBirthDate" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editGender">Jenis Kelamin</label>
+                        <select id="editGender" class="form-input" required>
+                            <option value="">Pilih</option>
+                            <option value="L">Laki-laki</option>
+                            <option value="P">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="editPhone">Nomor Telepon</label>
+                        <input type="tel" id="editPhone" class="form-input" placeholder="08xxxxxxxxxx" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="cancelEdit()">Batal</button>
+                        <button type="submit" class="btn btn-primary">Simpan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="nav-tabs">
+            <div class="nav-tab" onclick="goToDashboard()">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Beranda</div>
+            </div>
+            <div class="nav-tab" onclick="goToStatus()">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Status</div>
+            </div>
+            <div class="nav-tab" onclick="goToHistory()">
+                <div class="nav-icon">📚</div>
+                <div class="nav-label">Riwayat</div>
+            </div>
+            <div class="nav-tab active" onclick="goToProfile()">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">Profil</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            onAuthStateChanged,
+            updatePassword,
+            sendPasswordResetEmail,
+            deleteUser
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            doc, 
+            getDoc,
+            updateDoc
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDbfLOHuzxxcvDrQk1tbaint4oxlEm6q4",
+            authDomain: "blacklist-354bd.firebaseapp.com",
+            projectId: "blacklist-354bd",
+            storageBucket: "blacklist-354bd.firebasestorage.app",
+            messagingSenderId: "1028611915291",
+            appId: "1:1028611915291:web:df961356cab0a2d52582be",
+            measurementId: "G-SVKH95E2X7"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make functions globally available
+        window.auth = auth;
+        window.db = db;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.updatePassword = updatePassword;
+        window.sendPasswordResetEmail = sendPasswordResetEmail;
+        window.deleteUser = deleteUser;
+    </script>
+    
+    <script>
+        let currentUser = null;
+        let userData = null;
+        
+        // Check authentication state
+        function checkAuthState() {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                
+                if (user) {
+                    currentUser = user;
+                    
+                    // Load user profile
+                    loadUserProfile();
+                    
+                    // Hide loading screen
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 300);
+                    }, 1000);
+                } else {
+                    // User not authenticated, redirect to login
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+        
+        // Load user profile
+        async function loadUserProfile() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                
+                if (userDoc.exists()) {
+                    userData = userDoc.data();
+                    
+                    // Update profile display
+                    updateProfileDisplay();
+                } else {
+                    // User document doesn't exist, create basic profile
+                    const basicProfile = {
+                        name: currentUser.displayName || 'User',
+                        email: currentUser.email,
+                        phone: '',
+                        birthDate: '',
+                        gender: '',
+                        createdAt: new Date().toISOString(),
+                        profileComplete: false
+                    };
+                    
+                    await setDoc(doc(db, 'users', currentUser.uid), basicProfile);
+                    userData = basicProfile;
+                    updateProfileDisplay();
+                }
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                alert('Terjadi kesalahan saat memuat profil');
+            }
+        }
+        
+        // Update profile display
+        function updateProfileDisplay() {
+            // Update header
+            const profileAvatar = document.getElementById('profileAvatar');
+            const profileName = document.getElementById('profileName');
+            const profileEmail = document.getElementById('profileEmail');
+            
+            profileAvatar.textContent = (userData.name || 'U').charAt(0).toUpperCase();
+            profileName.textContent = userData.name || 'Nama tidak tersedia';
+            profileEmail.textContent = userData.email || currentUser.email;
+            
+            // Update info section
+            document.getElementById('infoName').textContent = userData.name || '-';
+            document.getElementById('infoBirthDate').textContent = userData.birthDate || '-';
+            document.getElementById('infoGender').textContent = userData.gender ? (userData.gender === 'L' ? 'Laki-laki' : 'Perempuan') : '-';
+            document.getElementById('infoPhone').textContent = userData.phone || '-';
+        }
+        
+        // Edit profile
+        function editProfile() {
+            // Show edit form
+            document.getElementById('personalInfoCard').style.display = 'none';
+            document.getElementById('editProfileForm').style.display = 'block';
+            
+            // Populate form with current data
+            document.getElementById('editName').value = userData.name || '';
+            document.getElementById('editBirthDate').value = userData.birthDate || '';
+            document.getElementById('editGender').value = userData.gender || '';
+            document.getElementById('editPhone').value = userData.phone || '';
+        }
+        
+        // Cancel edit
+        function cancelEdit() {
+            // Hide edit form
+            document.getElementById('editProfileForm').style.display = 'none';
+            document.getElementById('personalInfoCard').style.display = 'block';
+        }
+        
+        // Handle profile update
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            
+            const updatedData = {
+                name: document.getElementById('editName').value,
+                birthDate: document.getElementById('editBirthDate').value,
+                gender: document.getElementById('editGender').value,
+                phone: document.getElementById('editPhone').value,
+                profileComplete: true,
+                updatedAt: new Date().toISOString()
+            };
+            
+            try {
+                // Update Firestore
+                await updateDoc(doc(db, 'users', currentUser.uid), updatedData);
+                
+                // Update local data
+                userData = { ...userData, ...updatedData };
+                
+                // Update display
+                updateProfileDisplay();
+                
+                // Hide edit form
+                cancelEdit();
+                
+                // Show success message
+                alert('Profil berhasil diperbarui!');
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                alert('Terjadi kesalahan saat memperbarui profil');
+            }
+        }
+        
+        // Change password
+        function changePassword() {
+            const email = currentUser.email;
+            
+            if (confirm('Kami akan mengirimkan link reset kata sandi ke email Anda: ' + email)) {
+                sendPasswordResetEmail(auth, email)
+                    .then(() => {
+                        alert('Email reset kata sandi telah dikirim!');
+                    })
+                    .catch((error) => {
+                        console.error('Error sending password reset email:', error);
+                        alert('Terjadi kesalahan saat mengirim email reset');
+                    });
+            }
+        }
+        
+        // Confirm delete account
+        function confirmDeleteAccount() {
+            if (confirm('Apakah Anda yakin ingin menghapus akun Anda? Tindakan ini tidak dapat dibatalkan.')) {
+                if (confirm('Konfirmasi sekali lagi: Akun Anda dan semua data terkait akan dihapus permanen.')) {
+                    deleteAccount();
+                }
+            }
+        }
+        
+        // Delete account
+        async function deleteAccount() {
+            try {
+                // Delete user from Firebase Auth
+                await deleteUser(currentUser);
+                
+                // Note: You might want to also delete user data from Firestore here
+                // This is a simplified version
+                
+                alert('Akun berhasil dihapus');
+                window.location.href = 'index.html';
+                
+            } catch (error) {
+                console.error('Error deleting account:', error);
+                
+                if (error.code === 'auth/requires-recent-login') {
+                    alert('Untuk menghapus akun, silakan login kembali terlebih dahulu');
+                    window.location.href = 'index.html';
+                } else {
+                    alert('Terjadi kesalahan saat menghapus akun');
+                }
+            }
+        }
+        
+        // Navigation functions
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+        
+        function goToStatus() {
+            window.location.href = 'status.html';
+        }
+        
+        function goToHistory() {
+            window.location.href = 'riwayat.html';
+        }
+        
+        function goToProfile() {
+            window.location.href = 'profil.html';
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+        });
+        
+        // Make functions globally available
+        window.goToDashboard = goToDashboard;
+        window.goToStatus = goToStatus;
+        window.goToHistory = goToHistory;
+        window.goToProfile = goToProfile;
+        window.editProfile = editProfile;
+        window.cancelEdit = cancelEdit;
+        window.handleProfileUpdate = handleProfileUpdate;
+        window.changePassword = changePassword;
+        window.confirmDeleteAccount = confirmDeleteAccount;
+    </script>
+</body>
+</html>

@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Status Pengajuan - Sistem Blacklist Turki</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-red: #E30A17;
+            --primary-red-dark: #B30812;
+            --secondary-red: #C00914;
+            --accent-white: #FFFFFF;
+            --accent-gray: #F8F8F8;
+            --success-green: #10b981;
+            --warning-orange: #f97316;
+            --error-red: #ef4444;
+            --neutral-gray: #6b7280;
+            --light-gray: #f3f4f6;
+            --white: #ffffff;
+            --dark-text: #333333;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --shadow-heavy: rgba(0, 0, 0, 0.25);
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: var(--white);
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary-red);
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px var(--shadow-medium);
+            z-index: 1000;
+        }
+        .nav-content {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+        .app-title {
+            color: var(--white);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-white);
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        /* Container and Layout */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+            position: relative;
+        }
+        .page-content {
+            padding-top: 70px;
+            padding-bottom: 20px;
+        }
+        /* Status Cards */
+        .status-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+        .status-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        .status-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--dark-text);
+        }
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--warning-orange);
+        }
+        .status-processing {
+            background: rgba(59, 130, 246, 0.1);
+            color: #3b82f6;
+        }
+        .status-approved {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-red);
+        }
+        .status-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-text);
+        }
+        .status-timeline {
+            margin-top: 24px;
+        }
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 16px;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            font-size: 12px;
+        }
+        .timeline-icon.completed {
+            background: var(--success-green);
+            color: var(--white);
+        }
+        .timeline-icon.current {
+            background: var(--primary-red);
+            color: var(--white);
+        }
+        .timeline-icon.pending {
+            background: var(--light-gray);
+            color: var(--neutral-gray);
+        }
+        .timeline-content {
+            flex: 1;
+        }
+        .timeline-status {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--dark-text);
+            margin-bottom: 2px;
+        }
+        .timeline-date {
+            font-size: 12px;
+            color: var(--neutral-gray);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .empty-icon {
+            font-size: 48px;
+            color: var(--neutral-gray);
+            margin-bottom: 16px;
+        }
+        .empty-text {
+            font-size: 16px;
+            color: var(--neutral-gray);
+            margin-bottom: 20px;
+        }
+        .btn {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-align: center;
+            display: inline-block;
+            text-decoration: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 4px 8px rgba(227, 10, 23, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(227, 10, 23, 0.4);
+        }
+        /* Payment Info Card */
+        .payment-card {
+            background: linear-gradient(135deg, var(--warning-orange) 0%, #ea580c 100%);
+            color: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+            display: none;
+        }
+        .payment-card.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .payment-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .payment-details {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .payment-row:last-child {
+            margin-bottom: 0;
+        }
+        .payment-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .payment-value {
+            font-weight: 600;
+        }
+        .payment-note {
+            font-size: 14px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        .payment-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .btn-payment {
+            flex: 1;
+            padding: 10px;
+            background: var(--white);
+            color: var(--warning-orange);
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .btn-payment:hover {
+            background: var(--accent-gray);
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px var(--shadow-light);
+            z-index: 1000;
+        }
+        .nav-tabs {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--neutral-gray);
+            transition: var(--transition);
+            border-radius: 8px;
+            min-width: 60px;
+        }
+        .nav-tab:hover,
+        .nav-tab.active {
+            color: var(--primary-red);
+        }
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p>Memuat Status...</p>
+    </div>
+    
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo-container">
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/015/272/017/small/turkey-3d-rounded-flag-with-transparent-background-free-png.png" alt="Turki Flag Logo" class="logo">
+                <div class="app-title">Sistem Blacklist Turki</div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="goToDashboard()">Kembali</button>
+                <div class="user-avatar" id="userAvatar" onclick="goToProfile()">U</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-content">
+            <!-- Payment Info Card -->
+            <div class="payment-card" id="paymentCard">
+                <h3 class="payment-title">
+                    <span>💳</span>
+                    <span>Informasi Pembayaran</span>
+                </h3>
+                <div class="payment-details">
+                    <div class="payment-row">
+                        <span class="payment-label">Nominal:</span>
+                        <span class="payment-value" id="paymentAmount">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Atas Nama:</span>
+                        <span class="payment-value" id="paymentAccountName">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">No. Rekening:</span>
+                        <span class="payment-value" id="paymentAccountNumber">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Bank:</span>
+                        <span class="payment-value" id="paymentBank">-</span>
+                    </div>
+                </div>
+                <p class="payment-note" id="paymentNote">-</p>
+                <div class="payment-actions">
+                    <button class="btn-payment" onclick="copyAccountNumber()">Salin No. Rekening</button>
+                    <button class="btn-payment" onclick="confirmPayment()">Konfirmasi Pembayaran</button>
+                </div>
+            </div>
+            
+            <!-- Status Card -->
+            <div id="statusContainer" class="status-card fade-in">
+                <!-- Content will be dynamically loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="nav-tabs">
+            <div class="nav-tab" onclick="goToDashboard()">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Beranda</div>
+            </div>
+            <div class="nav-tab active" onclick="goToStatus()">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Status</div>
+            </div>
+            <div class="nav-tab" onclick="goToHistory()">
+                <div class="nav-icon">📚</div>
+                <div class="nav-label">Riwayat</div>
+            </div>
+            <div class="nav-tab" onclick="goToProfile()">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">Profil</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            collection, 
+            query, 
+            where, 
+            orderBy, 
+            limit,
+            getDocs,
+            doc,
+            getDoc,
+            updateDoc,
+            serverTimestamp,
+            onSnapshot
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDbfLOHuzxxcvDrQk1tbaint4oxlEm6q4",
+            authDomain: "blacklist-354bd.firebaseapp.com",
+            projectId: "blacklist-354bd",
+            storageBucket: "blacklist-354bd.firebasestorage.app",
+            messagingSenderId: "1028611915291",
+            appId: "1:1028611915291:web:df961356cab0a2d52582be",
+            measurementId: "G-SVKH95E2X7"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make functions globally available
+        window.auth = auth;
+        window.db = db;
+        window.collection = collection;
+        window.query = query;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.getDocs = getDocs;
+        window.doc = doc;
+        window.getDoc = getDoc;
+        window.updateDoc = updateDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.onSnapshot = onSnapshot;
+    </script>
+    
+    <script>
+        let currentUser = null;
+        let currentApplicationId = null;
+        
+        // Check authentication state
+        function checkAuthState() {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                
+                if (user) {
+                    currentUser = user;
+                    
+                    // Update user avatar
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (user.displayName) {
+                        userAvatar.textContent = user.displayName.charAt(0).toUpperCase();
+                    }
+                    
+                    // Load application status
+                    loadApplicationStatus();
+                    
+                    // Hide loading screen
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 300);
+                    }, 1000);
+                } else {
+                    // User not authenticated, redirect to login
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+        
+        // Load application status
+        async function loadApplicationStatus() {
+            const statusContainer = document.getElementById('statusContainer');
+            
+            try {
+                // Query for user's latest application
+                const q = query(
+                    collection(db, 'applications'),
+                    where('userId', '==', currentUser.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(1)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                
+                if (querySnapshot.empty) {
+                    // No applications found
+                    statusContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📋</div>
+                            <p class="empty-text">Anda belum memiliki pengajuan</p>
+                            <a href="form.html" class="btn btn-primary">Ajukan Sekarang</a>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Get the latest application
+                const applicationDoc = querySnapshot.docs[0];
+                const application = applicationDoc.data();
+                currentApplicationId = applicationDoc.id;
+                
+                // Set up real-time listener
+                const unsubscribe = onSnapshot(doc(db, 'applications', applicationDoc.id), (doc) => {
+                    const updatedApplication = doc.data();
+                    renderApplicationStatus(updatedApplication);
+                    
+                    // Show payment info if available
+                    if (updatedApplication.paymentInfo) {
+                        showPaymentInfo(updatedApplication.paymentInfo);
+                    }
+                });
+                
+            } catch (error) {
+                console.error('Error loading application status:', error);
+                statusContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">⚠️</div>
+                        <p class="empty-text">Terjadi kesalahan saat memuat status</p>
+                        <button class="btn btn-primary" onclick="loadApplicationStatus()">Coba Lagi</button>
+                    </div>
+                `;
+            }
+        }
+        
+        // Render application status
+        function renderApplicationStatus(application) {
+            const statusContainer = document.getElementById('statusContainer');
+            
+            // Format date
+            const formatDate = (timestamp) => {
+                if (!timestamp) return '-';
+                const date = timestamp.toDate();
+                return date.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            };
+            
+            // Get status class and text
+            const getStatusInfo = (status) => {
+                switch (status) {
+                    case 'pending':
+                        return { class: 'status-pending', text: 'Menunggu' };
+                    case 'processing':
+                        return { class: 'status-processing', text: 'Diproses' };
+                    case 'approved':
+                        return { class: 'status-approved', text: 'Disetujui' };
+                    case 'rejected':
+                        return { class: 'status-rejected', text: 'Ditolak' };
+                    default:
+                        return { class: 'status-pending', text: 'Menunggu' };
+                }
+            };
+            
+            const statusInfo = getStatusInfo(application.status);
+            const shortId = currentApplicationId.slice(-6);
+            
+            // Generate timeline based on status
+            const getTimeline = (status) => {
+                const timeline = [
+                    { status: 'Pengajuan Diterima', date: formatDate(application.createdAt), completed: true },
+                    { status: 'Verifikasi Dokumen', date: status === 'pending' ? '-' : formatDate(application.updatedAt), completed: status !== 'pending' },
+                    { status: 'Proses Review', date: status === 'processing' || status === 'approved' || status === 'rejected' ? formatDate(application.updatedAt) : '-', completed: status === 'processing' || status === 'approved' || status === 'rejected' },
+                    { status: status === 'approved' ? 'Disetujui' : status === 'rejected' ? 'Ditolak' : 'Selesai', date: status === 'approved' || status === 'rejected' ? formatDate(application.updatedAt) : '-', completed: status === 'approved' || status === 'rejected' }
+                ];
+                
+                return timeline.map((item, index) => {
+                    let iconClass = 'pending';
+                    if (item.completed) {
+                        iconClass = index === timeline.length - 1 ? 'current' : 'completed';
+                    }
+                    
+                    return `
+                        <div class="timeline-item">
+                            <div class="timeline-icon ${iconClass}">
+                                ${item.completed ? '✓' : index + 1}
+                            </div>
+                            <div class="timeline-content">
+                                <div class="timeline-status">${item.status}</div>
+                                <div class="timeline-date">${item.date}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            };
+            
+            // Render status card
+            statusContainer.innerHTML = `
+                <div class="status-header">
+                    <h3 class="status-title">Status Pengajuan #${shortId}</h3>
+                    <span class="status-badge ${statusInfo.class}">${statusInfo.text}</span>
+                </div>
+                
+                <div class="status-info">
+                    <div class="info-item">
+                        <span class="info-label">Nama Pemohon</span>
+                        <span class="info-value">${application.fullName}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Nomor Paspor</span>
+                        <span class="info-value">${application.passportNumber}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Tanggal Pengajuan</span>
+                        <span class="info-value">${formatDate(application.createdAt)}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Terakhir Diperbarui</span>
+                        <span class="info-value">${formatDate(application.updatedAt)}</span>
+                    </div>
+                </div>
+                
+                <div class="status-timeline">
+                    <h4 class="timeline-title">Proses Pengajuan</h4>
+                    ${getTimeline(application.status)}
+                </div>
+                
+                ${application.rejectionReason ? `
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(239, 68, 68, 0.1); border-radius: 8px; border-left: 4px solid var(--error-red);">
+                        <h4 style="color: var(--error-red); margin-bottom: 8px;">Alasan Penolakan:</h4>
+                        <p style="color: var(--dark-text); font-size: 14px;">${application.rejectionReason}</p>
+                    </div>
+                ` : ''}
+            `;
+        }
+        
+        // Show payment information
+        function showPaymentInfo(paymentInfo) {
+            const paymentCard = document.getElementById('paymentCard');
+            
+            document.getElementById('paymentAmount').textContent = paymentInfo.amount || '-';
+            document.getElementById('paymentAccountName').textContent = paymentInfo.accountName || '-';
+            document.getElementById('paymentAccountNumber').textContent = paymentInfo.accountNumber || '-';
+            document.getElementById('paymentBank').textContent = paymentInfo.bank || '-';
+            document.getElementById('paymentNote').textContent = paymentInfo.note || 'Tidak ada catatan tambahan';
+            
+            paymentCard.classList.add('show');
+        }
+        
+        // Copy account number
+        function copyAccountNumber() {
+            const accountNumber = document.getElementById('paymentAccountNumber').textContent;
+            if (accountNumber && accountNumber !== '-') {
+                navigator.clipboard.writeText(accountNumber).then(() => {
+                    alert('Nomor rekening berhasil disalin!');
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = accountNumber;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Nomor rekening berhasil disalin!');
+                });
+            }
+        }
+        
+        // Confirm payment
+        async function confirmPayment() {
+            if (!currentApplicationId) return;
+            
+            if (confirm('Apakah Anda sudah melakukan pembayaran?')) {
+                try {
+                    const docRef = doc(db, 'applications', currentApplicationId);
+                    
+                    await updateDoc(docRef, {
+                        status: 'approved',
+                        paymentConfirmed: true,
+                        paymentConfirmedAt: serverTimestamp(),
+                        updatedAt: serverTimestamp()
+                    });
+                    
+                    alert('Terima kasih! Pembayaran Anda telah dikonfirmasi.');
+                    
+                } catch (error) {
+                    console.error('Error confirming payment:', error);
+                    alert('Terjadi kesalahan saat mengkonfirmasi pembayaran');
+                }
+            }
+        }
+        
+        // Navigation functions
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+        
+        function goToProfile() {
+            window.location.href = 'profil.html';
+        }
+        
+        function goToStatus() {
+            window.location.href = 'status.html';
+        }
+        
+        function goToHistory() {
+            window.location.href = 'riwayat.html';
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+        });
+        
+        // Make functions globally available
+        window.goToDashboard = goToDashboard;
+        window.goToProfile = goToProfile;
+        window.goToStatus = goToStatus;
+        window.goToHistory = goToHistory;
+        window.copyAccountNumber = copyAccountNumber;
+        window.confirmPayment = confirmPayment;
+        window.loadApplicationStatus = loadApplicationStatus;
+    </script>
+</body>
+</html>

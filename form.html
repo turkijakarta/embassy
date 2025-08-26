@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pengajuan - Sistem Blacklist Turki</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary-red: #E30A17;
+            --primary-red-dark: #B30812;
+            --secondary-red: #C00914;
+            --accent-white: #FFFFFF;
+            --accent-gray: #F8F8F8;
+            --success-green: #10b981;
+            --warning-orange: #f97316;
+            --error-red: #ef4444;
+            --neutral-gray: #6b7280;
+            --light-gray: #f3f4f6;
+            --white: #ffffff;
+            --dark-text: #333333;
+            --shadow-light: rgba(0, 0, 0, 0.1);
+            --shadow-medium: rgba(0, 0, 0, 0.15);
+            --shadow-heavy: rgba(0, 0, 0, 0.25);
+            --border-radius: 8px;
+            --border-radius-lg: 12px;
+            --transition: all 0.3s ease;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--dark-text);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding-bottom: 70px;
+        }
+        /* Loading Screen */
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--secondary-red) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            color: var(--white);
+        }
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--primary-red);
+            padding: 12px 16px;
+            box-shadow: 0 2px 10px var(--shadow-medium);
+            z-index: 1000;
+        }
+        .nav-content {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px var(--shadow-light);
+        }
+        .app-title {
+            color: var(--white);
+            font-size: 18px;
+            font-weight: 600;
+        }
+        .nav-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: var(--white);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--accent-white);
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        /* Container and Layout */
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            padding: 0 16px;
+            position: relative;
+        }
+        .page-content {
+            padding-top: 70px;
+            padding-bottom: 20px;
+        }
+        /* Form Styles */
+        .form-card {
+            background: var(--white);
+            border-radius: var(--border-radius-lg);
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px var(--shadow-medium);
+        }
+        .form-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--primary-red);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-section {
+            margin-bottom: 24px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark-text);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--light-gray);
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--dark-text);
+            font-size: 14px;
+        }
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--light-gray);
+            border-radius: var(--border-radius);
+            font-size: 14px;
+            transition: var(--transition);
+            background: var(--white);
+        }
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--primary-red);
+            box-shadow: 0 0 0 3px rgba(227, 10, 23, 0.1);
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-hint {
+            font-size: 12px;
+            color: var(--neutral-gray);
+            margin-top: 4px;
+        }
+        
+        /* Simulated File Upload Styles */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            width: 100%;
+        }
+        .file-upload input[type=file] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        .file-upload-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border: 2px dashed var(--light-gray);
+            border-radius: var(--border-radius);
+            background: var(--accent-gray);
+            color: var(--neutral-gray);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+        .file-upload:hover .file-upload-label {
+            border-color: var(--primary-red);
+            color: var(--primary-red);
+        }
+        .file-upload.success .file-upload-label {
+            border-color: var(--success-green);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+        }
+        .file-upload.loading .file-upload-label {
+            border-color: var(--warning-orange);
+            background: rgba(249, 115, 22, 0.1);
+            color: var(--warning-orange);
+        }
+        .file-name {
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--neutral-gray);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .file-name.success {
+            color: var(--success-green);
+        }
+        .file-name.loading {
+            color: var(--warning-orange);
+        }
+        .file-remove {
+            color: var(--error-red);
+            cursor: pointer;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .file-preview {
+            margin-top: 12px;
+            padding: 12px;
+            background: var(--light-gray);
+            border-radius: var(--border-radius);
+            display: none;
+        }
+        .file-preview.show {
+            display: block;
+        }
+        .file-preview-image {
+            width: 100%;
+            max-height: 200px;
+            object-fit: cover;
+            border-radius: var(--border-radius);
+            margin-bottom: 8px;
+        }
+        .file-preview-info {
+            font-size: 12px;
+            color: var(--neutral-gray);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            min-height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--primary-red-dark) 100%);
+            color: var(--white);
+            box-shadow: 0 4px 8px rgba(227, 10, 23, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(227, 10, 23, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--white);
+            animation: spin 1s ease-in-out infinite;
+        }
+        .error-message {
+            color: var(--error-red);
+            font-size: 12px;
+            margin-top: 4px;
+            display: none;
+        }
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-green);
+            padding: 12px 16px;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            border-left: 4px solid var(--success-green);
+            display: none;
+        }
+        /* Payment Info Section */
+        .payment-info {
+            background: linear-gradient(135deg, var(--warning-orange) 0%, #ea580c 100%);
+            color: var(--white);
+            padding: 20px;
+            border-radius: var(--border-radius-lg);
+            margin-bottom: 20px;
+            display: none;
+        }
+        .payment-info.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .payment-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .payment-details {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+        }
+        .payment-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .payment-row:last-child {
+            margin-bottom: 0;
+        }
+        .payment-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .payment-value {
+            font-weight: 600;
+        }
+        .payment-note {
+            font-size: 14px;
+            opacity: 0.9;
+            font-style: italic;
+        }
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 -2px 10px var(--shadow-light);
+            z-index: 1000;
+        }
+        .nav-tabs {
+            max-width: 480px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+        }
+        .nav-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            text-decoration: none;
+            color: var(--neutral-gray);
+            transition: var(--transition);
+            border-radius: 8px;
+            min-width: 60px;
+        }
+        .nav-tab:hover,
+        .nav-tab.active {
+            color: var(--primary-red);
+        }
+        .nav-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+        /* Animations */
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        /* Responsive Design */
+        @media (max-width: 480px) {
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading-screen" id="loadingScreen">
+        <div class="loading-spinner"></div>
+        <p>Memuat Form...</p>
+    </div>
+    
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="nav-content">
+            <div class="logo-container">
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/015/272/017/small/turkey-3d-rounded-flag-with-transparent-background-free-png.png" alt="Turki Flag Logo" class="logo">
+                <div class="app-title">Sistem Blacklist Turki</div>
+            </div>
+            <div class="nav-actions">
+                <button class="nav-btn" onclick="goToDashboard()">Kembali</button>
+                <div class="user-avatar" id="userAvatar" onclick="goToProfile()">U</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container">
+        <div class="page-content">
+            <!-- Payment Info Section -->
+            <div class="payment-info" id="paymentInfo">
+                <h3 class="payment-title">
+                    <span>💳</span>
+                    <span>Informasi Pembayaran</span>
+                </h3>
+                <div class="payment-details">
+                    <div class="payment-row">
+                        <span class="payment-label">Nominal:</span>
+                        <span class="payment-value" id="paymentAmount">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Atas Nama:</span>
+                        <span class="payment-value" id="paymentAccountName">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">No. Rekening:</span>
+                        <span class="payment-value" id="paymentAccountNumber">-</span>
+                    </div>
+                    <div class="payment-row">
+                        <span class="payment-label">Bank:</span>
+                        <span class="payment-value" id="paymentBank">-</span>
+                    </div>
+                </div>
+                <p class="payment-note" id="paymentNote">-</p>
+            </div>
+            
+            <!-- Form Card -->
+            <div class="form-card fade-in">
+                <h2 class="form-title">Form Pengajuan Penghapusan Blacklist</h2>
+                
+                <div class="success-message" id="successMessage"></div>
+                
+                <form id="applicationForm" onsubmit="handleSubmit(event)">
+                    <!-- Personal Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Informasi Pribadi</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="fullName">Nama Lengkap</label>
+                            <input type="text" id="fullName" class="form-input" required>
+                            <div class="error-message" id="fullNameError"></div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label" for="birthDate">Tanggal Lahir</label>
+                                <input type="date" id="birthDate" class="form-input" required>
+                                <div class="error-message" id="birthDateError"></div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" for="gender">Jenis Kelamin</label>
+                                <select id="gender" class="form-select" required>
+                                    <option value="">Pilih</option>
+                                    <option value="L">Laki-laki</option>
+                                    <option value="P">Perempuan</option>
+                                </select>
+                                <div class="error-message" id="genderError"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="nationality">Kewarganegaraan</label>
+                            <input type="text" id="nationality" class="form-input" placeholder="Indonesia" required>
+                            <div class="error-message" id="nationalityError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="passportNumber">Nomor Paspor</label>
+                            <input type="text" id="passportNumber" class="form-input" required>
+                            <div class="error-message" id="passportNumberError"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Contact Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Informasi Kontak</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" id="email" class="form-input" required>
+                            <div class="error-message" id="emailError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Nomor Telepon</label>
+                            <input type="tel" id="phone" class="form-input" placeholder="08xxxxxxxxxx" required>
+                            <div class="error-message" id="phoneError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="address">Alamat Lengkap</label>
+                            <textarea id="address" class="form-textarea" required></textarea>
+                            <div class="error-message" id="addressError"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Blacklist Information Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Informasi Blacklist</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="blacklistDate">Tanggal Didaftarkan Blacklist</label>
+                            <input type="date" id="blacklistDate" class="form-input" required>
+                            <div class="error-message" id="blacklistDateError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="blacklistReason">Alasan Blacklist</label>
+                            <select id="blacklistReason" class="form-select" required>
+                                <option value="">Pilih Alasan</option>
+                                <option value="overstay">Overstay</option>
+                                <option value="violation">Pelanggaran Hukum</option>
+                                <option value="fraud">Penipuan Dokumen</option>
+                                <option value="security">Alasan Keamanan</option>
+                                <option value="other">Lainnya</option>
+                            </select>
+                            <div class="error-message" id="blacklistReasonError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="explanation">Penjelasan Tambahan</label>
+                            <textarea id="explanation" class="form-textarea" placeholder="Jelaskan secara detail alasan penghapusan blacklist..."></textarea>
+                            <div class="form-hint">Semakin detail penjelasan, semakin baik untuk pertimbangan</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Supporting Documents Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Dokumen Pendukung</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload Paspor</label>
+                            <div class="file-upload" id="passportUpload">
+                                <input type="file" id="passportFile" accept="image/*,.pdf" onchange="simulateFileUpload(this, 'passport')">
+                                <label for="passportFile" class="file-upload-label">
+                                    <span>📁</span>
+                                    <span>Pilih File Paspor</span>
+                                </label>
+                            </div>
+                            <div class="file-name" id="passportFileName"></div>
+                            <div class="file-preview" id="passportPreview">
+                                <img class="file-preview-image" id="passportPreviewImage">
+                                <div class="file-preview-info">File berhasil diupload</div>
+                            </div>
+                            <div class="error-message" id="passportFileError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload KTP</label>
+                            <div class="file-upload" id="ktpUpload">
+                                <input type="file" id="ktpFile" accept="image/*,.pdf" onchange="simulateFileUpload(this, 'ktp')">
+                                <label for="ktpFile" class="file-upload-label">
+                                    <span>📁</span>
+                                    <span>Pilih File KTP</span>
+                                </label>
+                            </div>
+                            <div class="file-name" id="ktpFileName"></div>
+                            <div class="file-preview" id="ktpPreview">
+                                <img class="file-preview-image" id="ktpPreviewImage">
+                                <div class="file-preview-info">File berhasil diupload</div>
+                            </div>
+                            <div class="error-message" id="ktpFileError"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Upload Dokumen Pendukung Lainnya</label>
+                            <div class="file-upload" id="otherUpload">
+                                <input type="file" id="otherFile" accept="image/*,.pdf" onchange="simulateFileUpload(this, 'other')">
+                                <label for="otherFile" class="file-upload-label">
+                                    <span>📁</span>
+                                    <span>Pilih File Lainnya</span>
+                                </label>
+                            </div>
+                            <div class="file-name" id="otherFileName"></div>
+                            <div class="file-preview" id="otherPreview">
+                                <img class="file-preview-image" id="otherPreviewImage">
+                                <div class="file-preview-info">File berhasil diupload</div>
+                            </div>
+                            <div class="form-hint">Opsional: Surat keterangan, bukti pembayaran, dll</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Declaration Section -->
+                    <div class="form-section">
+                        <h3 class="section-title">Pernyataan</h3>
+                        
+                        <div class="form-group">
+                            <label style="display: flex; align-items: flex-start; gap: 8px;">
+                                <input type="checkbox" id="declaration" style="margin-top: 4px;" required>
+                                <span style="font-size: 14px;">
+                                    Saya menyatakan bahwa semua informasi yang diberikan adalah benar dan dapat dipertanggungjawabkan. 
+                                    Saya menyetujui semua syarat dan ketentuan yang berlaku.
+                                </span>
+                            </label>
+                            <div class="error-message" id="declarationError"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" id="submitBtn">
+                        <span id="submitBtnText">Kirim Pengajuan</span>
+                        <div class="loading-spinner" id="submitSpinner" style="display: none;"></div>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation (Mobile) -->
+    <nav class="bottom-nav">
+        <div class="nav-tabs">
+            <div class="nav-tab" onclick="goToDashboard()">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">Beranda</div>
+            </div>
+            <div class="nav-tab" onclick="goToStatus()">
+                <div class="nav-icon">📊</div>
+                <div class="nav-label">Status</div>
+            </div>
+            <div class="nav-tab" onclick="goToHistory()">
+                <div class="nav-icon">📚</div>
+                <div class="nav-label">Riwayat</div>
+            </div>
+            <div class="nav-tab" onclick="goToProfile()">
+                <div class="nav-icon">👤</div>
+                <div class="nav-label">Profil</div>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            onAuthStateChanged
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc,
+            serverTimestamp,
+            getDoc,
+            onSnapshot,
+            query,
+            collection,
+            where,
+            orderBy,
+            limit,
+            getDocs
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCDbfLOHuzxxcvDrQk1tbaint4oxlEm6q4",
+            authDomain: "blacklist-354bd.firebaseapp.com",
+            projectId: "blacklist-354bd",
+            storageBucket: "blacklist-354bd.firebasestorage.app",
+            messagingSenderId: "1028611915291",
+            appId: "1:1028611915291:web:df961356cab0a2d52582be",
+            measurementId: "G-SVKH95E2X7"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Make functions globally available
+        window.auth = auth;
+        window.db = db;
+        window.doc = doc;
+        window.setDoc = setDoc;
+        window.serverTimestamp = serverTimestamp;
+        window.getDoc = getDoc;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.collection = collection;
+        window.where = where;
+        window.orderBy = orderBy;
+        window.limit = limit;
+        window.getDocs = getDocs;
+    </script>
+    
+    <script>
+        let currentUser = null;
+        let currentApplicationId = null;
+        let uploadedFiles = {
+            passport: null,
+            ktp: null,
+            other: null
+        };
+        
+        // Check authentication state
+        function checkAuthState() {
+            const unsubscribe = auth.onAuthStateChanged((user) => {
+                const loadingScreen = document.getElementById('loadingScreen');
+                
+                if (user) {
+                    currentUser = user;
+                    
+                    // Update user avatar
+                    const userAvatar = document.getElementById('userAvatar');
+                    if (user.displayName) {
+                        userAvatar.textContent = user.displayName.charAt(0).toUpperCase();
+                    }
+                    
+                    // Check if there's an existing application
+                    checkExistingApplication();
+                    
+                    // Pre-fill user data if available
+                    prefillUserData();
+                    
+                    // Hide loading screen
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 300);
+                    }, 1000);
+                } else {
+                    // User not authenticated, redirect to login
+                    window.location.href = 'index.html';
+                }
+            });
+        }
+        
+        // Check for existing application
+        async function checkExistingApplication() {
+            try {
+                // Get user's latest application
+                const q = query(
+                    collection(db, 'applications'),
+                    where('userId', '==', currentUser.uid),
+                    orderBy('createdAt', 'desc'),
+                    limit(1)
+                );
+                
+                const querySnapshot = await getDocs(q);
+                
+                if (!querySnapshot.empty) {
+                    const applicationDoc = querySnapshot.docs[0];
+                    const application = applicationDoc.data();
+                    
+                    // Store application ID
+                    currentApplicationId = applicationDoc.id;
+                    
+                    // Show payment info if available
+                    if (application.paymentInfo) {
+                        showPaymentInfo(application.paymentInfo);
+                    }
+                    
+                    // Restore uploaded files info if available
+                    if (application.files) {
+                        uploadedFiles = application.files;
+                        restoreFileUploads();
+                    }
+                    
+                    // Listen for real-time updates
+                    const unsubscribe = onSnapshot(doc(db, 'applications', applicationDoc.id), (doc) => {
+                        const updatedApplication = doc.data();
+                        if (updatedApplication.paymentInfo) {
+                            showPaymentInfo(updatedApplication.paymentInfo);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking existing application:', error);
+            }
+        }
+        
+        // Restore file uploads from saved data
+        function restoreFileUploads() {
+            if (uploadedFiles.passport) {
+                showFileUploadSuccess('passport', uploadedFiles.passport.name);
+            }
+            if (uploadedFiles.ktp) {
+                showFileUploadSuccess('ktp', uploadedFiles.ktp.name);
+            }
+            if (uploadedFiles.other) {
+                showFileUploadSuccess('other', uploadedFiles.other.name);
+            }
+        }
+        
+        // Show payment information
+        function showPaymentInfo(paymentInfo) {
+            const paymentInfoDiv = document.getElementById('paymentInfo');
+            
+            document.getElementById('paymentAmount').textContent = paymentInfo.amount || '-';
+            document.getElementById('paymentAccountName').textContent = paymentInfo.accountName || '-';
+            document.getElementById('paymentAccountNumber').textContent = paymentInfo.accountNumber || '-';
+            document.getElementById('paymentBank').textContent = paymentInfo.bank || '-';
+            document.getElementById('paymentNote').textContent = paymentInfo.note || 'Tidak ada catatan tambahan';
+            
+            paymentInfoDiv.classList.add('show');
+        }
+        
+        // Pre-fill user data from profile
+        async function prefillUserData() {
+            try {
+                const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    
+                    // Pre-fill form fields
+                    if (userData.name) document.getElementById('fullName').value = userData.name;
+                    if (userData.email) document.getElementById('email').value = userData.email;
+                    if (userData.phone) document.getElementById('phone').value = userData.phone;
+                    if (userData.birthDate) document.getElementById('birthDate').value = userData.birthDate;
+                    if (userData.gender) document.getElementById('gender').value = userData.gender;
+                }
+            } catch (error) {
+                console.error('Error pre-filling user data:', error);
+            }
+        }
+        
+        // Simulate file upload (doesn't actually upload to server)
+        function simulateFileUpload(input, fileType) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            // Clear previous error
+            clearError(fileType + 'File');
+            
+            // Simulate upload delay
+            const uploadContainer = document.getElementById(fileType + 'Upload');
+            const fileName = document.getElementById(fileType + 'FileName');
+            const preview = document.getElementById(fileType + 'Preview');
+            const previewImage = document.getElementById(fileType + 'PreviewImage');
+            
+            // Show loading state
+            uploadContainer.classList.add('loading');
+            fileName.innerHTML = '<span style="color: var(--warning-orange);">Mengupload...</span>';
+            
+            // Simulate upload process
+            setTimeout(() => {
+                // Store file info (simulated)
+                uploadedFiles[fileType] = {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    uploadedAt: new Date().toISOString()
+                };
+                
+                // Show success state
+                showFileUploadSuccess(fileType, file.name);
+                
+                // Show preview if it's an image
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImage.src = e.target.result;
+                        preview.classList.add('show');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // For PDF files, show a generic icon
+                    previewImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTQgMkMxNC44OTU4IDIgMTUuNzkwMiAyIDE3VjIxQzIgMjEuNTUyMyAyLjQ0NzcyIDIyIDMuNCAyMjNDNC41NTIzIDIyIDUgMjJDMTIuNDQ3NyAyMiAxMy4xMDQ3IDIxLjg5NTggMTQgMjFDMTQuODk1OCAyMS4xMDQ3IDE1LjU1MjMgMjIgMTYgMjJDMTYuNDQ3NyAyMiAxNy4xMDQ3IDIxLjg5NTggMTggMjFDMTguODk1OCAyMS4xMDQ3IDE5LjU1MjMgMjIgMjAgMjJDMjEuNTUyMyAyMiAyMi41NTIzIDIxLjg5NTggMjMgMjFWMTdDMjMgMTUuNzkwMiAyMi44OTU4IDIyIDE0IDIyWk0xNCA0QzEyLjM0MzE0IDQgMTEgNS4zNDMxNCAxMSA3VjE3QzExIDE4LjY1NjkgMTIuMzQzMSAyMCAxNCAyMFY0Wk0xNiA4QzE2IDcuNDQ3NzIgMTUuNTUyMyA3IDE1IDdDMTQuNDQ3NyA3IDE0IDcuNDQ3NzIgMTQgOFYxNEMxNCA4LjU1MjI4IDE0LjQ0NzcgOSAxNSA5QzE1LjU1MjMgOSAxNiA4LjU1MjI4IDE2IDhWMTZDMTYgNy40NDc3MiAxNi41NTIzIDcgMTcgN0MxNy40NDc3IDcgMTggNy40NDc3MiAxOCA4VjE0QzE4IDE0LjU1MjMgMTcuNTUyMyAxNSAxNyAxNUMxNi41NTIzIDE1IDE2IDE0LjU1MjMgMTYgMTRWMTZDMTYgMTMuMzQzMSAxNS41NTIzIDEzIDE3IDEzQzE4LjQ0NzcgMTMgMjAgMTMuMzQzMSAyMCAxNFYxOEMyMCAxOC42NTY5IDE5LjM0MzEgMTggMjAgMThDMjAuNjU2OSAxOCAyMS4zNDMxIDE3LjM0MzEgMTcgMTdDMjEuMzQzMSAxNi42NTY5IDIwLjY1NjkgMTYgMjAgMTZDMjAuNjU2OSAxNS4zNDMxIDIwLjM0MzEgMTQgMjAgMTRDMjAuMzQzMSAxMi42NTY5IDIwLjY1NjkgMTIgMjAgMTJDMjAuNjU2OSAxMS4zNDMxIDIxLjM0MzEgMTEgMjIgMTFDMjEuMzQzMSA5LjY1Njg5IDIwLjY1NjkgOSAyMCA5QzIwLjY1NjkgOC4zNDMxNCAyMS4zNDMxIDcuNjU2ODkgMjEgN1YxQzIxIDUuMzQzMTQgMjAuNjU2OSA1IDIwIDVDMTkuMzQzMSA1IDE4LjY1NjkgNS4zNDMxNCAxOCA1VjNDMTggMy4zNDMxNCAxNy42NTY5IDMgMTcgM0MxNi4zNDMxIDMgMTUuNjU2OSAzLjM0MzE0IDE1IDNDMTUgMi42NTY4OSAxNC4zNDMxIDMgMTMgM0MxMS42NTY5IDMgMTEgMi42NTY4OSAxMSAyQzEwLjM0MzEgMiA5LjY1Njg5IDEuMzQzMTQgOSAxQzguMzQzMTQgMC42NTY4NTcgNy42NTY4NSAwIDdWMUMwIDUuMzQzMTQgMC42NTY4NTcgNCAxLjM0MzE0IDQgMkM0LjEwMjU2IDQgNi44OTU0MyA1LjEwMjU2IDdWMTdDNS4xMDI1NiAxNy40NDc3IDYuODk1NDMgMTggOEM3LjEwMjU2IDE4LjU1MjMgNy4xMDI1NiAxOSAxMFYxOEM3LjEwMjU2IDIwLjQ0NzcgNi44OTU0MyAyMSA4IDIxQzYuODk1NDMgMjEuNTUyMyA2LjEwMjU2IDIyIDdWMjNDNi4xMDI1NiAyMy41NTIzIDYuODk1NDMgMjQgOEM2Ljg5NTQzIDI0LjQ0NzcgNy4xMDI1NiAyNSAyNVYyNUM3LjEwMjU2IDI1LjU1MjMgNi44OTU0MyAyNiAyNkM2Ljg5NTQzIDI2LjQ0NzcgNi4xMDI1NiAyNyAyN0M2LjEwMjU2IDI3LjU1MjMgNi44OTU0MyAyOCAyOFYyOEM2Ljg5NTQzIDI4LjQ0NzcgNy4xMDI1NiAyOSAyOUM3LjEwMjU2IDI5LjU1MjMgNi44OTU0MyAzMCAzMFYzMEM2Ljg5NTQzIDMwLjQ0NzcgNy4xMDI1NiAzMSAzMUM3LjEwMjU2IDMxLjU1MjMgNi44OTU0MyAzMiAzMkM2Ljg5NTQzIDMyLjQ0NzcgNy4xMDI1NiAzMyAzM0M3LjEwMjU2IDMzLjU1MjMgNi44OTU0MyAzNCAzNFYzNEM2Ljg5NTQzIDM0LjQ0NzcgNy4xMDI1NiAzNSAzNUM3LjEwMjU2IDM1LjU1MjMgNi44OTU0MyAzNiAzNkM2Ljg5NTQzIDM2LjQ0NzcgNy4xMDI1NiAzNyAzN0M3LjEwMjU2IDM3LjU1MjMgNi44OTU0MyAzOCAzOFYzOEM2Ljg5NTQzIDM4LjQ0NzcgNy4xMDI1NiAzOSAzOUM3LjEwMjU2IDM5LjU1MjMgNi44OTU0MyA0MCA0MFY0MEM2Ljg5NTQzIDQwLjQ0NzcgNy4xMDI1NiA0MSA0MUM3LjEwMjU2IDQxLjU1MjMgNi44OTU0MyA0MiA0MkM2Ljg5NTQzIDQyLjQ0NzcgNy4xMDI1NiA0MyA0M0M3LjEwMjU2IDQzLjU1MjMgNi44OTU0MyA0NCA0NFY0NEM2Ljg5NTQzIDQ0LjQ0NzcgNy4xMDI1NiA0NSA0NUM3LjEwMjU2IDQ1LjU1MjMgNi44OTU0MyA0NiA0NkM2Ljg5NTQzIDQ2LjQ0NzcgNy4xMDI1NiA0NyA0N0M3LjEwMjU2IDQ3LjU1MjMgNi44OTU0MyA0OCA0OFY0OEM2Ljg5NTQzIDQ4LjQ0NzcgNy4xMDI1NiA0OSA0OUM3LjEwMjU2IDQ5LjU1MjMgNi44OTU0MyA1MCA1MFY1MEM2Ljg5NTQzIDUwLjQ0NzcgNy4xMDI1NiA1MSA1MUM3LjEwMjU2IDUxLjU1MjMgNi44OTU0MyA1MiA1MkM2Ljg5NTQzIDUyLjQ0NzcgNy4xMDI1NiA1MyA1M0M3LjEwMjU2IDUzLjU1MjMgNi44OTU0MyA1NCA1NFY1NEM2Ljg5NTQzIDU0LjQ0NzcgNy4xMDI1NiA1NSA1NUM3LjEwMjU2IDU1LjU1MjMgNi44OTU0MyA1NiA1NkM2Ljg5NTQzIDU2LjQ0NzcgNy4xMDI1NiA1NyA1N0M3LjEwMjU2IDU3LjU1MjMgNi44OTU0MyA1OCA1OFY1OEM2Ljg5NTQzIDU4LjQ0NzcgNy4xMDI1NiA1OSA1OUM3LjEwMjU2IDU5LjU1MjMgNi44OTU0MyA2MCA2MFY2MEM2Ljg5NTQzIDYwLjQ0NzcgNy4xMDI1NiA2MSA2MUM3LjEwMjU2IDYxLjU1MjMgNi44OTU0MyA2MiA2MkM2Ljg5NTQzIDYyLjQ0NzcgNy4xMDI1NiA2MyA2M0M3LjEwMjU2IDYzLjU1MjMgNi44OTU0MyA2NCA2NFY2NEM2Ljg5NTQzIDY0LjQ0NzcgNy4xMDI1NiA2NSA2NUM3LjEwMjU2IDY1LjU1MjMgNi44OTU0MyA2NiA2NkM2Ljg5NTQzIDY2LjQ0NzcgNy4xMDI1NiA2NyA2N0M3LjEwMjU2IDY3LjU1MjMgNi44OTU0MyA2OCA2OFY2OEM2Ljg5NTQzIDY4LjQ0NzcgNy4xMDI1NiA2OSA2OUM3LjEwMjU2IDY5LjU1MjMgNi44OTU0MyA3MCA3MFY3MEM2Ljg5NTQzIDcwLjQ0NzcgNy4xMDI1NiA3MSA3MUM3LjEwMjU2IDcxLjU1MjMgNi44OTU0MyA3MiA3MkM2Ljg5NTQzIDcyLjQ0NzcgNy4xMDI1NiA3MyA3M0M3LjEwMjU2IDczLjU1MjMgNi44OTU0MyA3NCA3NFY3NEM2Ljg5NTQzIDc0LjQ0NzcgNy4xMDI1NiA3NSA3NUM3LjEwMjU2IDc1LjU1MjMgNi44OTU0MyA3NiA3NkM2Ljg5NTQzIDc2LjQ0NzcgNy4xMDI1NiA3NyA3N0M3LjEwMjU2IDc3LjU1MjMgNi44OTU0MyA3OCA3OFY3OEM2Ljg5NTQzIDc4LjQ0NzcgNy4xMDI1NiA3OSA3OUM3LjEwMjU2IDc5LjU1MjMgNi44OTU0MyA4MCA4MFY4MEM2Ljg5NTQzIDgwLjQ0NzcgNy4xMDI1NiA4MSA4MUM3LjEwMjU2IDgxLjU1MjMgNi44OTU0MyA4MiA4MkM2Ljg5NTQzIDgyLjQ0NzcgNy4xMDI1NiA4MyA4M0M3LjEwMjU2IDgzLjU1MjMgNi44OTU0MyA4NCA4NFY4NEM2Ljg5NTQzIDg0LjQ0NzcgNy4xMDI1NiA4NSA4NUM3LjEwMjU2IDg1LjU1MjMgNi44OTU0MyA4NiA4NkM2Ljg5NTQzIDg2LjQ0NzcgNy4xMDI1NiA4NyA4N0M3LjEwMjU2IDg3LjU1MjMgNi44OTU0MyA4OCA4OFY4OEM2Ljg5NTQzIDg4LjQ0NzcgNy4xMDI1NiA4OSA4OUM3LjEwMjU2IDg5LjU1MjMgNi44OTU0MyA5MCA5MFY5MEM2Ljg5NTQzIDkwLjQ0NzcgNy4xMDI1NiA5MSA5MUM3LjEwMjU2IDkxLjU1MjMgNi44OTU0MyA5MiA5MkM2Ljg5NTQzIDkyLjQ0NzcgNy4xMDI1NiA5MyA5M0M3LjEwMjU2IDkzLjU1MjMgNi44OTU0MyA5NCA5NFY5NEM2Ljg5NTQzIDk0LjQ0NzcgNy4xMDI1NiA5NSA5NUM3LjEwMjU2IDk1LjU1MjMgNi44OTU0MyA5NiA5NkM2Ljg5NTQzIDk2LjQ0NzcgNy4xMDI1NiA5NyA5N0M3LjEwMjU2IDk3LjU1MjMgNi44OTU0MyA5OCA5OFY5OEM2Ljg5NTQzIDk4LjQ0NzcgNy4xMDI1NiA5OSA5OUM3LjEwMjU2IDk5LjU1MjMgNi44OTU0MyAxMDAgMTAwVjEwMEM2Ljg5NTQzIDEwMC40NDc3IDcuMTAyNTYgMTAxIDEwMUM3LjEwMjU2IDEwMS41NTIzIDYuODk1NDMgMTAyIDEwMkM2Ljg5NTQzIDEwMi40NDc3IDcuMTAyNTYgMTAzIDEwM0M3LjEwMjU2IDEwMy41NTIzIDYuODk1NDMgMTA0IDEwNFYxMDRDNi44OTU0MyAxMDQuNDQ3NyA3LjEwMjU2IDEwNSAxMDVDNy4xMDI1NiAxMDUuNTUyMyA2Ljg5NTQzIDEwNiAxMDZDMi44OTU0MyAxMDYuNDQ3NyAzLjEwMjU2IDEwNyAxMDdDMy44OTU0MyAxMDcuNTUyMyAyLjg5NTQzIDEwOCAxMDhDMi44OTU0MyAxMDguNDQ3NyAxLjEwMjU2IDEwOSAxMDlDMi44OTU0MyAxMDkuNTUyMyAyLjg5NTQzIDExMCAxMTBWMTEwQzIuODk1NDMgMTEwLjQ0NzcgMy4xMDI1NiAxMTEgMTFDMzguMTAyNTYgMTExLjU1MjMgMzguODk1NDMgMTEyIDExMkMzOC44OTU0MyAxMTIuNDQ3NyAzOS4xMDI1NiAxMTMgMTEzQzM5LjEwMjU2IDExMy41NTIzIDM4Ljg5NTQzIDExNCAxMTRDMzguODk1NDMgMTE0LjQ0NzcgMzkuMTAyNTYgMTE1IDExNUMzOS4xMDI1NiAxMTUuNTUyMyAzOC44OTU0MyAxMTYgMTE2QzM4Ljg5NTQzIDExNi40NDc3IDM5LjEwMjU2IDExNyAxMTdDMzkuMTAyNTYgMTE3LjU1MjMgMzguODk1NDMgMTE4IDExOEMzOC44OTU0MyAxMTguNDQ3NyAzOS4xMDI1NiAxMTkgMTE5QzM5LjEwMjU2IDExOS41NTIzIDM4Ljg5NTQzIDEyMCAxMjBDMzguODk1NDMgMTIwLjQ0NzcgMzkuMTAyNTYgMTIxIDEyMUMzOS4xMDI1NiAxMjEuNTUyMyAzOC44OTU0MyAxMjIgMTIyQzM4Ljg5NTQzIDEyMi40NDc3IDM5LjEwMjU2IDEyMyAxMjNDMzkuMTAyNTYgMTIzLjU1MjMgMzguODk1NDMgMTI0IDEyNEMzOC44OTU0MyAxMjQuNDQ3NyAzOS4xMDI1NiAxMjUgMTI1QzM5LjEwMjU2IDEyNS41NTIzIDM4Ljg5NTQzIDEyNiAxMjZDMzguODk1NDMgMTI2LjQ0NzcgMzkuMTAyNTYgMTI3IDEyN0MzOS4xMDI1NiAxMjcuNTUyMyAzOC44OTU0MyAxMjggMTI4QzM4Ljg5NTQzIDEyOC40NDc3IDM5LjEwMjU2IDEyOSAxMjlDMzkuMTAyNTYgMTI5LjU1MjMgMzguODk1NDMgMTMwIDEzMFMzOC44OTU0MyAxMzAuNDQ3NyAzOS4xMDI1NiAxMzEgMTMxQzM5LjEwMjU2IDEzMS41NTIzIDM4Ljg5NTQzIDEzMiAxMzJDMzguODk1NDMgMTMyLjQ0NzcgMzkuMTAyNTYgMTMzIDEzM0g4MzkuMTAyNTYgMTMzLjU1MjMgMzguODk1NDMgMTM0IDEzNVYxMzVDMzguODk1NDMgMTM1LjQ0NzcgMzkuMTAyNTYgMTM2IDEzNkMzOS4xMDI1NiAxMzYuNTUyMyAzOC44OTU0MyAxMzcgMTM3QzM4Ljg5NTQzIDEzNy40NDc3IDM5LjEwMjU2IDEzOCAxMzhDMzkuMTAyNTYgMTM4LjU1MjMgMzguODk1NDMgMTM5IDEzOUMzOC44OTU0MyAxMzkuNDQ3NyAzOS4xMDI1NiAxNDAgMTQwQzM5LjEwMjU2IDE0MC41NTIzIDM4Ljg5NTQzIDE0MSAxNDFDMzguODk1NDMgMTQxLjQ0NzcgMzkuMTAyNTYgMTQyIDE0MkMzOS4xMDI1NiAxNDIuNTUyMyAzOC44OTU0MyAxNDMgMTQzQzM4Ljg5NTQzIDE0My40NDc3IDM5LjEwMjU2IDE0NCAxNDRDMzkuMTAyNTYgMTQ0LjU1MjMgMzguODk1NDMgMTQ1IDE0NUMzOS4xMDI1NiAxNDUuNTUyMyAzOC44OTU0MyAxNDYgMTQ2QzM4Ljg5NTQzIDE0Ni40NDc3IDM5LjEwMjU2IDE0NyAxNDdDMzkuMTAyNTYgMTQ3LjU1MjMgMzguODk1NDMgMTQ4IDE0OEMzOC44OTU0MyAxNDguNDQ3NyAzOS4xMDI1NiAxNDkgMTQ5QzM5LjEwMjU2IDE0OS41NTIzIDM4Ljg5NTQzIDE1MCAxNTBDMzguODk1NDMgMTUwLjQ0NzcgMzkuMTAyNTYgMTUxIDE1MUMzOS4xMDI1NiAxNTEuNTUyMyAzOC44OTU0MyAxNTIgMTUyQzM4Ljg5NTQzIDE1Mi40NDc3IDM5LjEwMjU2IDE1MyAxNTNDMzkuMTAyNTYgMTUzLjU1MjMgMzguODk1NDMgMTU0IDE1NEMzOC44OTU0MyAxNTQuNDQ3NyAzOS4xMDI1NiAxNTUgMTU1QzM5LjEwMjU2IDE1NS41NTIzIDM4Ljg5NTQzIDE1NiAxNTZDMzguODk1NDMgMTU2LjQ0NzcgMzkuMTAyNTYgMTU3IDE1N0MzOS4xMDI1NiAxNTcuNTUyMyAzOC44OTU0MyAxNTggMTU4QzM4Ljg5NTQzIDE1OC40NDc3IDM5LjEwMjU2IDE1OSAxNTlDMzkuMTAyNTYgMTU5LjU1MjMgMzguODk1NDMgMTYwIDE2MEMzOC44OTU0MyAxNjAuNDQ3NyAzOS4xMDI1NiAxNjEgMTYxQzM5LjEwMjU2IDE2MS41NTIzIDM4Ljg5NTQzIDE2MiAxNjJDMzguODk1NDMgMTYyLjQ0NzcgMzkuMTAyNTYgMTYzIDE2M0MzOS4xMDI1NiAxNjMuNTUyMyAzOC44OTU0MyAxNjQgMTY0QzM4Ljg5NTQzIDE2NC40NDc3IDM5LjEwMjU2IDE2NSAxNjVDMzkuMTAyNTYgMTY1LjU1MjMgMzguODk1NDMgMTY2IDE2NkMzOC44OTU0MyAxNjYuNDQ3NyAzOS4xMDI1NiAxNjcgMTY3QzM5LjEwMjU2IDE2Ny41NTIzIDM4Ljg5NTQzIDE2OCAxNjhDMzguODk1NDMgMTY4LjQ0NzcgMzkuMTAyNTYgMTY5IDE2OUMzOS4xMDI1NiAxNjkuNTUyMyAzOC44OTU0MyAxNzAgMTcwQzM4Ljg5NTQzIDE3MC40NDc3IDM5LjEwMjU2IDE3MSAxNzFDMzkuMTAyNTYgMTcxLjU1MjMgMzguODk1NDMgMTcyIDE3MkMzOC44OTU0MyAxNzIuNDQ3NyAzOS4xMDI1NiAxNzMgMTczQzM5LjEwMjU2IDE3My41NTIzIDM4Ljg5NTQzIDE3NCAxNzRDMzguODk1NDMgMTc0LjQ0NzcgMzkuMTAyNTYgMTc1IDE3NUMzOS4xMDI1NiAxNzUuNTUyMyAzOC44OTU0MyAxNzYgMTc2QzM4Ljg5NTQzIDE3Ni40NDc3IDM5LjEwMjU2IDE3NyAxNzdDMzkuMTAyNTYgMTc3LjU1MjMgMzguODk1NDMgMTc4IDE3OEMzOC44OTU0MyAxNzguNDQ3NyAzOS4xMDI1NiAxNzkgMTc5QzM5LjEwMjU2IDE3OS41NTIzIDM4Ljg5NTQzIDE4MCAxODBDMzguODk1NDMgMTgwLjQ0NzcgMzkuMTAyNTYgMTgxIDE4MUMzOS4xMDI1NiAxODEuNTUyMyAzOC44OTU0MyAxODIgMTgyQzM4Ljg5NTQzIDE4Mi40NDc3IDM5LjEwMjU2IDE4MyAxODNDMzkuMTAyNTYgMTgzLjU1MjMgMzguODk1NDMgMTg0IDE4NEMzOC44OTU0MyAxODQuNDQ3NyAzOS4xMDI1NiAxODUgMTg1QzM5LjEwMjU2IDE4NS41NTIzIDM4Ljg5NTQzIDE4NiAxODZDMzguODk1NDMgMTg2LjQ0NzcgMzkuMTAyNTYgMTg3IDE4N0MzOS4xMDI1NiAxODcuNTUyMyAzOC44OTU0MyAxODggMTg4QzM4Ljg5NTQzIDE4OC40NDc3IDM5LjEwMjU2IDE4OSAxODlDMzkuMTAyNTYgMTg5LjU1MjMgMzguODk1NDMgMTkwIDE5MEMzOC44OTU0MyAxOTAuNDQ3NyAzOS4xMDI1NiAxOTEgMTkxQzM5LjEwMjU2IDE5MS41NTIzIDM4Ljg5NTQzIDE5MiAxOTJDMzguODk1NDMgMTkyLjQ0NzcgMzkuMTAyNTYgMTkzIDE5M0MzOS4xMDI1NiAxOTMuNTUyMyAzOC44OTU0MyAxOTQgMTk0QzM4Ljg5NTQzIDE5NC40NDc3IDM5LjEwMjU2IDE5NSAxOTVDMzkuMTAyNTYgMTk1LjU1MjMgMzguODk1NDMgMTk2IDE5NkMzOC44OTU0MyAxOTYuNDQ3NyAzOS4xMDI1NiAxOTcgMTk3QzM5LjEwMjU2IDE5Ny41NTIzIDM4Ljg5NTQzIDE5OCAxOThDMzguODk1NDMgMTk4LjQ0NzcgMzkuMTAyNTYgMTk5IDE5OUMzOS4xMDI1NiAxOTkuNTUyMyAzOC44OTU0MyAyMDAgMjAwWiIgZmlsbD0iI2MwMDAwMCIvPjwvc3ZnPg==';
+                    preview.classList.add('show');
+                }
+            }, 1500); // Simulate 1.5 second upload time
+        }
+        
+        // Show file upload success
+        function showFileUploadSuccess(fileType, fileName) {
+            const uploadContainer = document.getElementById(fileType + 'Upload');
+            const fileNameElement = document.getElementById(fileType + 'FileName');
+            
+            uploadContainer.classList.remove('loading');
+            uploadContainer.classList.add('success');
+            
+            fileNameElement.innerHTML = `
+                <span class="success">✓ ${fileName}</span>
+                <span class="file-remove" onclick="removeFile('${fileType}')">Hapus</span>
+            `;
+            fileNameElement.classList.add('success');
+        }
+        
+        // Remove uploaded file
+        function removeFile(fileType) {
+            uploadedFiles[fileType] = null;
+            
+            const uploadContainer = document.getElementById(fileType + 'Upload');
+            const fileName = document.getElementById(fileType + 'FileName');
+            const preview = document.getElementById(fileType + 'Preview');
+            
+            uploadContainer.classList.remove('success', 'loading');
+            fileName.innerHTML = '';
+            fileName.classList.remove('success');
+            preview.classList.remove('show');
+            
+            // Reset file input
+            document.getElementById(fileType + 'File').value = '';
+        }
+        
+        // Show error message
+        function showError(fieldId, message) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            
+            if (errorElement && inputElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+                inputElement.style.borderColor = 'var(--error-red)';
+            }
+        }
+        
+        // Clear error message
+        function clearError(fieldId) {
+            const errorElement = document.getElementById(fieldId + 'Error');
+            const inputElement = document.getElementById(fieldId);
+            
+            if (errorElement && inputElement) {
+                errorElement.style.display = 'none';
+                inputElement.style.borderColor = '';
+            }
+        }
+        
+        // Clear all error messages
+        function clearAllErrors() {
+            const errorElements = document.querySelectorAll('.error-message');
+            const inputElements = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+            
+            errorElements.forEach(el => el.style.display = 'none');
+            inputElements.forEach(el => el.style.borderColor = '');
+        }
+        
+        // Validate email format
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Validate phone number (Indonesian format)
+        function validatePhone(phone) {
+            const phoneRegex = /^(\+62|62|0)[0-9]{9,13}$/;
+            return phoneRegex.test(phone.replace(/\s/g, ''));
+        }
+        
+        // Set loading state
+        function setLoadingState(buttonId, isLoading) {
+            const btn = document.getElementById(buttonId);
+            const btnText = document.getElementById(buttonId + 'Text');
+            const spinner = document.getElementById(buttonId.replace('Btn', 'Spinner'));
+            
+            if (btn && btnText && spinner) {
+                btn.disabled = isLoading;
+                if (isLoading) {
+                    btnText.style.display = 'none';
+                    spinner.style.display = 'block';
+                } else {
+                    btnText.style.display = 'block';
+                    spinner.style.display = 'none';
+                }
+            }
+        }
+        
+        // Handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            clearAllErrors();
+            
+            // Get form values
+            const formData = {
+                fullName: document.getElementById('fullName').value,
+                birthDate: document.getElementById('birthDate').value,
+                gender: document.getElementById('gender').value,
+                nationality: document.getElementById('nationality').value,
+                passportNumber: document.getElementById('passportNumber').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                blacklistDate: document.getElementById('blacklistDate').value,
+                blacklistReason: document.getElementById('blacklistReason').value,
+                explanation: document.getElementById('explanation').value,
+                declaration: document.getElementById('declaration').checked,
+                files: uploadedFiles // Include simulated file uploads
+            };
+            
+            // Validation
+            let hasError = false;
+            
+            if (formData.fullName.length < 3) {
+                showError('fullName', 'Nama lengkap minimal 3 karakter');
+                hasError = true;
+            }
+            
+            if (!formData.birthDate) {
+                showError('birthDate', 'Tanggal lahir wajib diisi');
+                hasError = true;
+            }
+            
+            if (!formData.gender) {
+                showError('gender', 'Jenis kelamin wajib dipilih');
+                hasError = true;
+            }
+            
+            if (!formData.nationality) {
+                showError('nationality', 'Kewarganegaraan wajib diisi');
+                hasError = true;
+            }
+            
+            if (!formData.passportNumber) {
+                showError('passportNumber', 'Nomor paspor wajib diisi');
+                hasError = true;
+            }
+            
+            if (!validateEmail(formData.email)) {
+                showError('email', 'Format email tidak valid');
+                hasError = true;
+            }
+            
+            if (!validatePhone(formData.phone)) {
+                showError('phone', 'Format nomor telepon tidak valid');
+                hasError = true;
+            }
+            
+            if (!formData.address) {
+                showError('address', 'Alamat lengkap wajib diisi');
+                hasError = true;
+            }
+            
+            if (!formData.blacklistDate) {
+                showError('blacklistDate', 'Tanggal blacklist wajib diisi');
+                hasError = true;
+            }
+            
+            if (!formData.blacklistReason) {
+                showError('blacklistReason', 'Alasan blacklist wajib dipilih');
+                hasError = true;
+            }
+            
+            if (!formData.declaration) {
+                showError('declaration', 'Anda harus menyetujui pernyataan');
+                hasError = true;
+            }
+            
+            // Check if at least passport is uploaded
+            if (!uploadedFiles.passport) {
+                showError('passportFile', 'Paspor wajib diupload');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            setLoadingState('submitBtn', true);
+            
+            try {
+                // Create application document
+                const applicationData = {
+                    ...formData,
+                    userId: currentUser.uid,
+                    userEmail: currentUser.email,
+                    status: 'pending',
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                };
+                
+                // Save to Firestore
+                if (currentApplicationId) {
+                    // Update existing application
+                    await setDoc(doc(db, 'applications', currentApplicationId), applicationData, { merge: true });
+                } else {
+                    // Create new application
+                    const docRef = doc(db, 'applications', Date.now().toString());
+                    await setDoc(docRef, applicationData);
+                    currentApplicationId = docRef.id;
+                }
+                
+                // Show success message
+                const successMessage = document.getElementById('successMessage');
+                successMessage.textContent = 'Pengajuan berhasil dikirim! Kami akan memproses permohonan Anda.';
+                successMessage.style.display = 'block';
+                
+                // Scroll to top
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                
+                // Redirect to dashboard after 3 seconds
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error submitting application:', error);
+                alert('Terjadi kesalahan saat mengirim pengajuan. Silakan coba lagi.');
+            } finally {
+                setLoadingState('submitBtn', false);
+            }
+        }
+        
+        // Navigation functions
+        function goToDashboard() {
+            window.location.href = 'dashboard.html';
+        }
+        
+        function goToProfile() {
+            window.location.href = 'profil.html';
+        }
+        
+        function goToStatus() {
+            window.location.href = 'status.html';
+        }
+        
+        function goToHistory() {
+            window.location.href = 'riwayat.html';
+        }
+        
+        // Clear errors when user starts typing
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('form-input') || 
+                e.target.classList.contains('form-select') || 
+                e.target.classList.contains('form-textarea')) {
+                clearError(e.target.id);
+            }
+        });
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuthState();
+        });
+        
+        // Make functions globally available
+        window.simulateFileUpload = simulateFileUpload;
+        window.removeFile = removeFile;
+        window.handleSubmit = handleSubmit;
+        window.goToDashboard = goToDashboard;
+        window.goToProfile = goToProfile;
+        window.goToStatus = goToStatus;
+        window.goToHistory = goToHistory;
+    </script>
+</body>
+</html>
